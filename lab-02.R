@@ -1,3 +1,13 @@
+# Install necessary libraries if not already installed
+if (!require(dplyr)) install.packages("dplyr")
+if (!require(magrittr)) install.packages("magrittr")
+if (!require(ggplot2)) install.packages("ggplot2")
+
+# Load the libraries
+library(dplyr)      # for data manipulation
+library(magrittr)   # for using %>% pipes
+library(ggplot2)    # for plotting
+
 data <- read.csv("wiek.csv")
 
 # 1. Sort the data
