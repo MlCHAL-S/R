@@ -8,6 +8,8 @@ library(dplyr)      # for data manipulation
 library(magrittr)   # for using %>% pipes
 library(ggplot2)    # for plotting
 
+setwd("/home/michal/Desktop/R/14X")
+
 data <- read.csv("wiek.csv")
 
 # 1. Sort the data
