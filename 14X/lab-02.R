@@ -66,19 +66,37 @@ descriptive_stats <- function(x) {
 }
 
 stats <- descriptive_stats(data$wiek)
-print(stats)
+cat("Min:", stats$min, "\n",
+    "Max:", stats$max, "\n",
+    "Mean:", stats$mean, "\n",
+    "SD:", stats$sd, "\n",
+    "Variance:", stats$variance, "\n",
+    "Median:", stats$median, "\n",
+    "Mode:", stats$mode, "\n",
+    "Lower Bound (3-sigma):", stats$lower_bound, "\n",
+    "Upper Bound (3-sigma):", stats$upper_bound, "\n",
+    "Outliers:", ifelse(length(stats$outliers) > 0, paste(stats$outliers, collapse = ", "), "None"), "\n")
+
 
 
 # 3. plot the Distribution
 ggplot(data, aes(x = wiek)) +
   geom_histogram(binwidth = 5, fill = "blue", color = "black", alpha = 0.7) +
-  labs(title = "Age Distribution of Employees", x = "Age", y = "Count")
+  labs(title = "Age Distribution", x = "Age", y = "Count")
+
+# histogram
+h <- hist(data$wiek, breaks=c(10, 20, 30, 40, 50, 60), prob=T)
+h$counts <- cumsum(h$counts)
+plot(h)
 
 # Plotting the Cumulative Distribution Function
 ggplot(data, aes(x = wiek)) +
   stat_ecdf(geom = "step", color = "red") +
   labs(title = "Cumulative Distribution Function of Age", x = "Age", y = "ECDF")
 
+N <- length(data$wiek)
+plot(c(20, 30, 40, 50, 60), h$counts / N, type="b")
+plot(ecdf((data$wiek)), main="Dystrybuanta")
 
 # 4. Percentage of Employees Aged 31-40
 age_31_40 <- data %>%
