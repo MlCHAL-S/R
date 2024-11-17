@@ -1,0 +1,29 @@
+# setwd('Desktop/R/12XI')
+
+library(nortest)
+library(agricolae)
+library(car)
+library(dplyr)
+library(ExpDes)
+
+srczas <- read.csv('SrCzasAlgorytmy.csv', sep = ';')
+srczas
+
+srczassort <- srczas[order(srczas[,'Algorytm']),]
+
+adsrczasN <- c(ad.test(srczassort[1:20, 3])$p.value,
+                ad.test(srczassort[21:40, 3])$p.value,
+                ad.test(srczassort[41:60, 3])$p.value,
+                ad.test(srczassort[61:80, 3])$p.value,
+                ad.test(srczassort[81:100, 3])$p.value)
+
+adsrczas <- function(y){
+  adsrcz <- rep(0, 5)
+  for (i in 1:length(adsrcz))
+    adsrcz[i] <- ad.test(y[(1 + 20 * (i-1)):(20*i),3])$p.value
+  print(adsrcz)
+}
+
+
+spalanie <- read.csv('SrSpalanie.csv', sep = ';')
+spalanie
