@@ -11,12 +11,16 @@ library(agricolae)  # For SNK test
 library(dplyr)      # For data manipulation (%>% and group_by)
 library(ExpDes)     # For SNK (Student-Newman-Keuls) test
 
+srczasort<-srczas[order(srczas[,"Algorytm"]),]  	
+srczasort
+
 #N(*,*) 
 adsrczasN<-c(ad.test(srczasort[1:20,3])$p.value,
              ad.test(srczasort[21:40,3])$p.value,
              ad.test(srczasort[41:60,3])$p.value,
              ad.test(srczasort[61:80,3])$p.value,
              ad.test(srczasort[81:100,3])$p.value)
+adsrczasN
 
 # lub funkcja
 adsrczas<-function(y){
@@ -33,7 +37,6 @@ srcz<-function(y){
   for (i in 1:length(sredniczas))
     sredniczas[i]<-mean(y[(1+20*(i-1)):(20*i),3])
   print(sredniczas)}
-
 srcz(srczasort)
 
 # var	
@@ -42,7 +45,6 @@ varsrczas<-function(y){
   for (i in 1:length(varsrcz))
     varsrcz[i]<-var(y[(1+20*(i-1)):(20*i),3])
   print(varsrcz)}
-
 varsrczas(srczasort)
 
 ### ANoVA
