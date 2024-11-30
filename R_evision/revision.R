@@ -3,7 +3,24 @@
 # ============================================================================
 
 # =======================
-# Session 1: 11XI
+# Session 1: 4XI
+# =======================
+# Setting the working directory
+setwd('Desktop/R/4XI')
+
+# Reloading `Trendy.csv` to reinforce concepts
+trendy <- read.csv('Trendy.csv', sep = ';')
+print("Trend Data (Revisited):")
+print(head(trendy))
+
+# Revisit trend analysis from session 6
+ggplot(trendy, aes(x = date, y = value)) +
+  geom_line(color = "green") +
+  labs(title = "Trend Analysis (Revisited)", x = "Date", y = "Value") +
+  theme_minimal()
+
+# =======================
+# Session 2: 11XI
 # =======================
 # Setting the working directory (adjust according to your system)
 # This ensures the script can access the necessary files.
@@ -52,7 +69,7 @@ spalanie <- read.csv('SrSpalanie.csv', sep = ';')  # Fuel consumption data
 print(spalanie)
 
 # =======================
-# Session 2: 14X
+# Session 3: 14X
 # =======================
 # Setting the working directory
 setwd('/home/michal/Desktop/R/14X')
@@ -143,7 +160,7 @@ percentage_le_40 <- (nrow(age_le_40) / nrow(data)) * 100
 print(paste("Percentage of employees aged ≤ 40:", round(percentage_le_40, 2), "%"))
 
 # =======================
-# Session 3: 18XI
+# Session 4: 18XI
 # =======================
 # Setting the working directory
 setwd('Desktop/R/18XI')
@@ -169,7 +186,7 @@ print("Fuel Consumption Data:")
 print(spalanie)
 
 # =======================
-# Session 4: 21X
+# Session 5: 21X
 # =======================
 # Setting the working directory
 setwd('Desktop/R/21X')
@@ -185,7 +202,7 @@ print(wm_data)
 summary(wm_data)  # Summary statistics of the dataset
 
 # =======================
-# Session 5: 25XI
+# Session 6: 25XI
 # =======================
 # Setting the working directory
 setwd('Desktop/R/25XI')
@@ -229,7 +246,7 @@ logit_model <- glm(dependent ~ independent, family = binomial(link = "logit"), d
 summary(logit_model)
 
 # =======================
-# Session 6: 28X
+# Session 7: 28XI
 # =======================
 # Setting the working directory
 setwd('Desktop/R/28X')
@@ -252,23 +269,6 @@ print("WM Dataset (Revisited):")
 print(head(wm_data))
 
 # =======================
-# Session 7: 4XI
-# =======================
-# Setting the working directory
-setwd('Desktop/R/4XI')
-
-# Reloading `Trendy.csv` to reinforce concepts
-trendy <- read.csv('Trendy.csv', sep = ';')
-print("Trend Data (Revisited):")
-print(head(trendy))
-
-# Revisit trend analysis from session 6
-ggplot(trendy, aes(x = date, y = value)) +
-  geom_line(color = "green") +
-  labs(title = "Trend Analysis (Revisited)", x = "Date", y = "Value") +
-  theme_minimal()
-
-# =======================
 # Summary: Key Lessons and Reusable Functions
 # =======================
 # 1. Anderson-Darling Test for Normality
@@ -283,3 +283,4 @@ ggplot(trendy, aes(x = date, y = value)) +
 #    Examples of Probit and Logistic regression models with `glm()`.
 
 # End of Script
+
