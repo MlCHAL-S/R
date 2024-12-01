@@ -2,285 +2,468 @@
 # Combined R Script for Data Analysis and Statistical Learning
 # ============================================================================
 
-# =======================
-# Session 1: 4XI
-# =======================
-# Setting the working directory
-setwd('Desktop/R/4XI')
+# ============================================================================
+#                               Session 1: 7X
+# ============================================================================
+setwd('/home/michal/Desktop/R/7X')
+# Some basics to cover later
 
-# Reloading `Trendy.csv` to reinforce concepts
-trendy <- read.csv('Trendy.csv', sep = ';')
-print("Trend Data (Revisited):")
-print(head(trendy))
-
-# Revisit trend analysis from session 6
-ggplot(trendy, aes(x = date, y = value)) +
-  geom_line(color = "green") +
-  labs(title = "Trend Analysis (Revisited)", x = "Date", y = "Value") +
-  theme_minimal()
-
-# =======================
-# Session 2: 11XI
-# =======================
-# Setting the working directory (adjust according to your system)
-# This ensures the script can access the necessary files.
-setwd('Desktop/R/12XI')
-
-# Load necessary libraries
-# These libraries are used for statistical testing, data manipulation, and analysis.
-library(nortest)    # For normality testing (Anderson-Darling test)
-library(agricolae)  # Statistical analysis in agriculture (not used directly here)
-library(car)        # Companion for applied regression
-library(dplyr)      # Data manipulation
-library(ExpDes)     # Experimental design and data analysis
-
-# Load the dataset for analysis
-srczas <- read.csv('SrCzasAlgorytmy.csv', sep = ';')  # Algorithm execution times
-print(srczas)
-
-# Sorting the data by the 'Algorytm' column
-srczassort <- srczas[order(srczas[,'Algorytm']),]
-print(srczassort)
-
-# Perform Anderson-Darling test for normality on segments of data
-adsrczasN <- c(
-  ad.test(srczassort[1:20, 3])$p.value,
-  ad.test(srczassort[21:40, 3])$p.value,
-  ad.test(srczassort[41:60, 3])$p.value,
-  ad.test(srczassort[61:80, 3])$p.value,
-  ad.test(srczassort[81:100, 3])$p.value
-)
-print(adsrczasN)
-
-# Create a function for applying Anderson-Darling test on segmented data
-adsrczas <- function(y) {
-  adsrcz <- rep(0, 5)  # Initialize a vector for storing p-values
-  for (i in 1:length(adsrcz)) {
-    adsrcz[i] <- ad.test(y[(1 + 20 * (i - 1)):(20 * i), 3])$p.value
-  }
-  print(adsrcz)
-}
-
-# Example usage:
-adsrczas(srczassort)
-
-# Load another dataset for analysis
-spalanie <- read.csv('SrSpalanie.csv', sep = ';')  # Fuel consumption data
-print(spalanie)
-
-# =======================
-# Session 3: 14X
-# =======================
-# Setting the working directory
+# ============================================================================
+#                               Session 2: 14X
+# ============================================================================
 setwd('/home/michal/Desktop/R/14X')
+wiek=read.csv("/home/michal/Desktop/R/data/wiek.csv",header=T,sep=";") #wczytanie danych
+wiek_sort <- sort(wiek$wiek)
 
-# Load the necessary libraries
-if (!require(dplyr)) install.packages("dplyr")
-if (!require(magrittr)) install.packages("magrittr")
-if (!require(ggplot2)) install.packages("ggplot2")
-
-library(dplyr)      # Data manipulation
-library(magrittr)   # Pipe operators for cleaner syntax
-library(ggplot2)    # Data visualization
-
-# Load the dataset for analysis
-data <- read.csv("wiek.csv")  # Employee ages
-print(data)
-
-# Sorting the data by the 'wiek' column
-sorted_data <- data %>% arrange(wiek)
-print("Sorted data:")
-print(sorted_data)
-
-# Define a function for descriptive statistics
-descriptive_stats <- function(x) {
-  min_val <- min(x)
-  max_val <- max(x)
-  mean_val <- mean(x)
-  sd_val <- sd(x)  # Standard deviation
-  var_val <- var(x)  # Variance
-  median_val <- median(x)
-  mode_val <- as.numeric(names(sort(table(x), decreasing = TRUE)[1]))  # Most frequent value
-  lower_bound <- mean_val - 3 * sd_val  # 3-sigma lower bound
-  upper_bound <- mean_val + 3 * sd_val  # 3-sigma upper bound
-  outliers <- x[x < lower_bound | x > upper_bound]  # Outliers
+#	2. stworzy� funkcj�, kt�ra wyznaczy: min, max, �rednia, sd, var, mediana, dominanta, 
+kra�ce przedzia�u wg regu�y 3sigma oraz sprawdzi�, czy istniej� warto�ci odstaj�ce;
+summary <- function(wiek_sort){
+  minV <- min(wiek_sort)
+  cat("min: ",minV,"\n")
+  maxV <- max(wiek_sort)
+  cat("max: ",maxV ,"\n")
+  meanV <- mean(wiek_sort)
+  cat("srednia: ",meanV ,"\n")
+  sdV <- sd(wiek_sort) # sigma
+  cat("sd: ",sdV ,"\n")
+  varV <- var(wiek_sort) # wariancja
+  cat("var: ",varV ,"\n")
+  medianV <- median(wiek_sort)
+  cat("mediana: ",medianV ,"\n")
   
-  # Return a list of all statistics
-  list(
-    min = min_val,
-    max = max_val,
-    mean = mean_val,
-    sd = sd_val,
-    variance = var_val,
-    median = median_val,
-    mode = mode_val,
-    lower_bound = lower_bound,
-    upper_bound = upper_bound,
-    outliers = outliers
-  )
+  #TODO: dominanta poprawic
+  modeV <- as.numeric(names(sort(table(wiek_sort), decreasing = T) [1]))
+  cat("mode: ",modeV ,"\n")
+  
+  lower_bound <- meanV - 3 * sdV
+  upper_bound <- meanV + 3 * sdV
+  
+  cat("przedzial 3 sigma: (",lower_bound,"; ",upper_bound,")\n")
+  
+  outliers <- (minV < lower_bound | maxV > upper_bound)
+  cat("wartosci odstajace: ",outliers ,"\n")
+  
+  
+  #	3. wyznaczy� rozk�ad i dystrybuant� zmiennej "wiek" oraz przedstawi� graficznie wynik;
+  
+  # rozklad wieku
+  tabela <- table(wiek_sort)
+  # histogram
+  h = hist(wiek$wiek,breaks=c(10,20,30,40,50,60),prob=T)
+  h$counts
+  
+  h$counts <- cumsum(h$counts)
+  plot(h)
+  
+  N <- length(wiek$wiek)
+  plot(c(20,30,40,50,60),h$counts/N,type="b")
+  plot(ecdf(wiek$wiek), main = "Dystrybuanta empiryczna")
+  
+  #	4. Jaki % wszystkich pracownik�w stanowi� osoby: a) w wieku 31-40 lat oraz b) nie przekroczy�y 40 lat?
+  
+  # Procent pracowników w wieku 31-40 lat
+  procent31a40 <- 100 * sum(wiek$wiek >= 31 & wiek$wiek <= 40) / N
+  cat("Procent pracowników w wieku 31-40 lat:", procent31a40, "%\n")
+  
+  # Procent pracowników, którzy nie przekroczyli 40 lat
+  procent_do40 <- 100 * sum(wiek$wiek <= 40) / N
+  cat("Procent pracowników, którzy nie przekroczyli 40 lat:", procent_do40, "%\n")
 }
 
-# Apply the descriptive statistics function
-stats <- descriptive_stats(data$wiek)
-cat("Descriptive Statistics:\n")
-cat("Min:", stats$min, "\n",
-    "Max:", stats$max, "\n",
-    "Mean:", stats$mean, "\n",
-    "SD:", stats$sd, "\n",
-    "Variance:", stats$variance, "\n",
-    "Median:", stats$median, "\n",
-    "Mode:", stats$mode, "\n",
-    "Lower Bound (3-sigma):", stats$lower_bound, "\n",
-    "Upper Bound (3-sigma):", stats$upper_bound, "\n",
-    "Outliers:", ifelse(length(stats$outliers) > 0, paste(stats$outliers, collapse = ", "), "None"), "\n")
+summary <- summary(wiek_sort)
 
-# Visualize data distribution
-ggplot(data, aes(x = wiek)) +
-  geom_histogram(binwidth = 5, fill = "blue", color = "black", alpha = 0.7) +
-  labs(title = "Age Distribution", x = "Age", y = "Count")
 
-# Plot cumulative histogram
-h <- hist(data$wiek, breaks = c(10, 20, 30, 40, 50, 60), prob = T)
-h$counts <- cumsum(h$counts)
-plot(h, main = "Cumulative Histogram", xlab = "Age", ylab = "Cumulative Count")
+# ============================================================================
+#                               Session 1: 21X
+# ============================================================================
+setwd('/home/michal/Desktop/R/21X')
 
-# Cumulative distribution function plot
-ggplot(data, aes(x = wiek)) +
-  stat_ecdf(geom = "step", color = "red") +
-  labs(title = "Cumulative Distribution Function of Age", x = "Age", y = "ECDF")
+plik=read.csv("/home/michal/Desktop/R/data/WM.csv",header=T,sep=";")
+plik
 
-# Percentage of employees aged 31-40
-age_31_40 <- data %>% filter(wiek >= 31 & wiek <= 40)
-percentage_31_40 <- (nrow(age_31_40) / nrow(data)) * 100
-print(paste("Percentage of employees aged 31-40:", round(percentage_31_40, 2), "%"))
+m <- cbind(plik$M)
+x <- cbind(1, plik$W)
+xt <- t(x)
 
-# Percentage of employees aged ≤ 40
-age_le_40 <- data %>% filter(wiek <= 40)
-percentage_le_40 <- (nrow(age_le_40) / nrow(data)) * 100
-print(paste("Percentage of employees aged ≤ 40:", round(percentage_le_40, 2), "%"))
+xSqared <- xt %*% x
+xInv <- solve(xSqared)
 
-# =======================
-# Session 4: 18XI
-# =======================
-# Setting the working directory
-setwd('Desktop/R/18XI')
+p <- xInv %*% xt %*% m
+p[1]
 
-# Load necessary libraries (already loaded earlier)
-# No additional libraries introduced here.
+mTeor <- p[1] + p[2] * plik$W
 
-# Reloading `SrCzasAlgorytmy.csv` for further analysis
-srczas <- read.csv('SrCzasAlgorytmy.csv', sep = ';')  # Algorithm execution times
-print(srczas)
+plot(plik$W, plik$M, col="blue", pch=1, xlim=c(2000, 4300), ylim=c(1900, 4300))
+lines(plik$W, mTeor, col="green")
+legend("bottomright", c("M empiryczne", "Mt teoretyczne"), col=c("blue","green"), pch=c(1,NA), lty=c(NA,1))
 
-# Sorting the dataset
-srczassort <- srczas[order(srczas[, 'Algorytm']),]
-print("Sorted dataset by Algorytm:")
-print(srczassort)
 
-# Reusing the Anderson-Darling testing function (defined earlier)
-adsrczas(srczassort)
+alfa_poczatkowe <- c(-100,1,1)
 
-# Reloading `SrSpalanie.csv` for analysis of fuel consumption data
-spalanie <- read.csv('SrSpalanie.csv', sep = ';')
-print("Fuel Consumption Data:")
-print(spalanie)
+MNW <- function(alfa, M, W){
+  sum(0.5*log(alfa[3])+0.5*log(M-alfa[1]-alfa[2]*W)^2/alfa[3])}
+# ============================================================================
+#                               Session 1: 28X
+# ============================================================================
+setwd('/home/michal/Desktop/R/28X')
 
-# =======================
-# Session 5: 21X
-# =======================
-# Setting the working directory
-setwd('Desktop/R/21X')
 
-# Load the new dataset `WM.csv`
-wm_data <- read.csv('WM.csv', sep = ';')  # Assumed to be a dataset for analysis
-print("Loaded WM Dataset:")
-print(wm_data)
+# ============================================================================
+#                               Session 1: 4XI
+# ============================================================================
+setwd('/home/michal/Desktop/R/4XI')
+trendy = read.csv("/home/michal/Desktop/R/data/Trendy.csv",header=T,sep=";")
 
-# Perform preliminary analysis on `WM.csv`
-# Since no specific operations are given, let’s assume:
-# - Checking basic statistics
-summary(wm_data)  # Summary statistics of the dataset
+par(mfrow=c(2,2))
 
-# =======================
-# Session 6: 25XI
-# =======================
-# Setting the working directory
-setwd('Desktop/R/25XI')
+plot (trendy$y1)
+plot (trendy$y2)
+plot (trendy$y3)
+plot (trendy$y4)
 
-# Load datasets for advanced statistical and survey analysis
-ancz10zm <- read.csv('AnCz10zm.csv', sep = ';')  # Example dataset (10 variables)
-anczkw <- read.csv('AnCzKwestionariusz.csv', sep = ';')  # Survey data
-platnosci <- read.csv('platnosci.csv', sep = ';')  # Payments/Financial data
-probitlogit <- read.csv('ProbitLogit.csv', sep = ';')  # Probit and logistic regression dataset
-serwer <- read.csv('serwer.csv', sep = ';')  # Server-related dataset
+y <- trendy$y1
+t <- 1:length(y)
 
-# Print dataset previews
-print("AnCz10zm Dataset:")
-print(head(ancz10zm))
+plot(y)
 
-print("Survey Data (AnCzKwestionariusz):")
-print(head(anczkw))
+M <- cbind(trendy$y1)
+x <- cbind(1, trendy$t)
+xt <- t(x)
 
-print("Payments Data (Platnosci):")
-print(head(platnosci))
+xSqared <- xt %*% x
+xInv <- solve(xSqared)
 
-print("Probit and Logit Data:")
-print(head(probitlogit))
+p <- xInv %*% xt %*% M
 
-print("Server Data:")
-print(head(serwer))
+mTeorLin <- p[1] + p[2] * trendy$t
 
-# Placeholder for specific statistical modeling (Probit/Logit)
-# Example: Probit Model using `glm`
-if (!require(stats)) install.packages("stats")
-library(stats)
+X <- cbind(1, trendy$t, trendy$t^2)
+Xt <- t(X)
+XSquared <- Xt %*% X
+XInv <- solve(XSquared)
+P <- XInv %*% Xt %*% M
+mTeorQuad <- P[1] + P[2] * trendy$t + P[3] * trendy$t^2
 
-# Assume `dependent` and `independent` are column names in the `probitlogit` dataset
-# Replace with actual column names if known
-# Example Probit Regression:
-probit_model <- glm(dependent ~ independent, family = binomial(link = "probit"), data = probitlogit)
-summary(probit_model)
+simpleQuad <- lm(y ~ I(t^2))
 
-# Example Logistic Regression:
-logit_model <- glm(dependent ~ independent, family = binomial(link = "logit"), data = probitlogit)
-summary(logit_model)
+lines(trendy$t, mTeorLin , col="red")
+lines(trendy$t, mTeorQuad , col="blue")
 
-# =======================
-# Session 7: 28XI
-# =======================
-# Setting the working directory
-setwd('Desktop/R/28X')
+lines(trendy$t, predict(simpleQuad), col="green")
 
-# Load `Trendy.csv` for trend analysis
-trendy <- read.csv('Trendy.csv', sep = ';')
-print("Trend Data:")
-print(head(trendy))
 
-# Plotting trends over time
-# Assuming `date` and `value` are columns in `Trendy.csv`
-ggplot(trendy, aes(x = date, y = value)) +
-  geom_line(color = "blue") +
-  labs(title = "Trend Analysis", x = "Date", y = "Value") +
-  theme_minimal()
+y2 <- trendy$y2
+t2 <- 1:length(y2)
 
-# Load and analyze `WM.csv` again (if necessary)
-wm_data <- read.csv('WM.csv', sep = ';')
-print("WM Dataset (Revisited):")
-print(head(wm_data))
+plot(y2)
 
-# =======================
-# Summary: Key Lessons and Reusable Functions
-# =======================
-# 1. Anderson-Darling Test for Normality
-#    Function `adsrczas()` defined and reused.
-# 2. Descriptive Statistics
-#    Function `descriptive_stats()` for min, max, mean, SD, variance, mode, etc.
-# 3. Data Manipulation
-#    Sorting, filtering, and summarizing datasets using `dplyr`.
-# 4. Visualization
-#    Created histograms, cumulative distributions, and line charts with `ggplot2`.
-# 5. Advanced Modeling
-#    Examples of Probit and Logistic regression models with `glm()`.
+expModel <- lm(log(y2) ~ t)
+expFitted <- exp(predict(expModel))
+lines(t, expFitted, col = "green")
+
+expModel <- lm(log(y2) ~ t-1)
+expFitted <- exp(predict(expModel))
+lines(t, expFitted, col = "red")
+
+hyperModel <- lm(y2 ~ I(1/t))
+hyperFitted <- predict(hyperModel)
+lines(t, hyperFitted, col = "blue")
+# ============================================================================
+#                               Session 2: 12XI
+# ============================================================================
+setwd('/home/michal/Desktop/R/12XI')
+srczas<-read.csv2("/home/michal/Desktop/R/data/SrCzasAlgorytmy.csv",sep=";",dec=".")
+
+library(nortest) #ad.test	
+library(agricolae) #SNK.test
+library(car)	# Levene
+library(dplyr)	# %>% group by ...
+library(ExpDes)	# snk
+
+srczasort<-srczas[order(srczas[,"Algorytm"]),]  	
+
+#N(*,*) 
+adsrczasN<-c(ad.test(srczasort[1:20,3])$p.value,
+             ad.test(srczasort[21:40,3])$p.value,
+             ad.test(srczasort[41:60,3])$p.value,
+             ad.test(srczasort[61:80,3])$p.value,
+             ad.test(srczasort[81:100,3])$p.value)
+
+# lub funkcja
+adsrczas<-function(y){
+  adsrcz<-rep(0,5)
+  for (i in 1:length(adsrcz))
+    adsrcz[i]<-ad.test(y[(1+20*(i-1)):(20*i),3])$p.value
+  print(adsrcz)}
+
+adsrczas(srczasort)
+
+# mean
+srcz<-function(y){
+  sredniczas<-rep(0,5)
+  for (i in 1:length(sredniczas))
+    sredniczas[i]<-mean(y[(1+20*(i-1)):(20*i),3])
+  print(sredniczas)}
+
+srcz(srczasort)
+
+# var	
+varsrczas<-function(y){
+  varsrcz<-rep(0,5)
+  for (i in 1:length(varsrcz))
+    varsrcz[i]<-var(y[(1+20*(i-1)):(20*i),3])
+  print(varsrcz)}
+
+varsrczas(srczasort)
+
+### ANoVA
+aovsrczas<-aov(srczasort$Czas~srczasort$Algorytm)
+anova(aovsrczas)						
+
+# Kruskal-Wallis - nieparametryczna alternatywa dla ANOVA jeśli np. warunek N() nie jest spełniony
+kruskal.test(srczasort$Czas,srczasort$Algorytm)
+
+
+## TESTY post-hoc:
+#Tukey - "uczciwie istotnych różnic", zakłada równoliczność grup
+TukeyHSD(aovsrczas)					
+
+#LSD (agricolae) - nie zakłada równoliczności grup
+
+# Test SNK (Student-Newman-Keuls) - podobny do TukeyHSD
+dfErrorSrCzas <- df.residual(aovsrczas)
+SSerrorSrCzas <- sum(aovsrczas$residuals^2)
+MSerrorSrCzas <- SSerrorSrCzas/dfErrorSrCzas
+snk(srczasort$Czas,srczasort$Algorytm,dfErrorSrCzas,SSerrorSrCzas)
+
+#============spalanie===========
+
+# Create the new dataset
+data <-read.csv2("SrSpalanie.csv",sep=";",dec=".")
+
+data_long <- data.frame(
+  Algorithm = rep(c("S1", "S2", "S3", "S4", "S5"), each = 6),
+  Time = c(data$S1, data$S2, data$S3, data$S4, data$S5)
+)
+
+# Remove NA values
+data_long <- data_long[!is.na(data_long$Time), ]
+
+# Calculate means
+means <- data_long %>%
+  group_by(Algorithm) %>%
+  summarize(mean_time = mean(Time))
+
+print(means)
+
+# Calculate variances
+variances <- data_long %>%
+  group_by(Algorithm) %>%
+  summarize(variance_time = var(Time))
+
+print(variances)
+
+# ANOVA
+aov_results <- aov(Time ~ Algorithm, data = data_long)
+summary(aov_results)
+
+# Kruskal-Wallis test
+kruskal_test_results <- kruskal.test(Time ~ Algorithm, data = data_long)
+print(kruskal_test_results)
+
+# Tukey HSD
+tukey_results <- TukeyHSD(aov_results)
+print(tukey_results)
+
+# SNK test
+df_error <- df.residual(aov_results)
+ss_error <- sum(aov_results$residuals^2)
+ms_error <- ss_error / df_error
+snk_results <- snk(data_long$Time, data_long$Algorithm, df_error, ss_error)
+
+
+
+#===============czas-uwzglednienie dwoch cech=====================
+
+srczas<-read.csv2("SrCzasAlgorytmy.csv",sep=";",dec=".")
+
+srczasort <- srczas[order(srczas$Algorytm, srczas$InspNatura),]	
+
+ad_test_results <- srczasort %>%
+  group_by(Algorytm, InspNatura) %>%
+  summarize(p_value = ad.test(Czas)$p.value)
+
+print(ad_test_results)
+
+# Calculate means
+srcz <- function(y){
+  sredniczas <- y %>%
+    group_by(Algorytm, InspNatura) %>%
+    summarize(mean_time = mean(Czas))
+  print(sredniczas)
+}
+
+srcz(srczasort)
+
+# Calculate variances
+varsrczas <- function(y){
+  varsrcz <- y %>%
+    group_by(Algorytm, InspNatura) %>%
+    summarize(variance_time = var(Czas))
+  print(varsrcz)
+}
+
+varsrczas(srczasort)
+
+# Two-Way ANOVA
+aovsrczas <- aov(Czas ~ Algorytm * InspNatura, data = srczasort)
+summary(aovsrczas)	
+
+reszty<-aovsrczas$residuals
+
+hist(reszty,main ="Histogram-reszty",xlab="Reszty")				
+
+# Tukey HSD
+tukey_results <- TukeyHSD(aovsrczas)
+print(tukey_results)
+
+plot(tukey_results, las=2)
+
+# SNK test
+dfErrorSrCzas <- df.residual(aovsrczas)
+SSerrorSrCzas <- sum(aovsrczas$residuals^2)
+MSerrorSrCzas <- SSerrorSrCzas / dfErrorSrCzas
+snk_results <- snk(srczasort$Czas, interaction(srczasort$Algorytm, srczasort$InspNatura), dfErrorSrCzas, SSerrorSrCzas)
+
+# ============================================================================
+#                               Session 2: 18XI
+# ============================================================================
+setwd('/home/michal/Desktop/R/18XI')
+
+library(nFactors)
+library(corpcor)
+library(psych)
+library(lavaan)
+
+kwest<-read.csv2("/home/michal/Desktop/R/data/AnCzKwestionariusz.csv",sep=";",dec=".")
+zm<-read.csv2("/home/michal/Desktop/R/data/AnCz10zm.csv",sep=";",dec=".")
+
+# ============================================================================
+#                               Session 2: 25XI
+# ============================================================================
+setwd('/home/michal/Desktop/R/25XI')
+
+dane<-read.csv2("/home/michal/Desktop/R/data/ProbitLogit.csv",sep=";",dec=".")
+
+CzestEmp<-dane[,6]/dane[,2]
+SrWiek<-(dane$WiekDo-dane$WiekOd)/2+dane$WiekOd
+SrStaz<-dane$SrStazPracy
+X<-as.matrix(cbind(rep(1,10),SrWiek,SrStaz))
+XT<-t(X)
+
+#PROBIT
+ProbEmp<-qnorm(CzestEmp)+5
+
+odwVi<-1/(CzestEmp* (1-CzestEmp)/(dane[,2]*(dnorm(CzestEmp))^2))
+odwV<-diag(odwVi)
+
+temp<-XT %*% odwV %*% X
+tempOdw<-solve(temp)
+Beta<-tempOdw %*% XT %*% odwV %*% ProbEmp
+
+ProbitTeor<-X%*%Beta
+piTeorProb<-pnorm(ProbitTeor-5)
+probitR2<-1-sum((CzestEmp-piTeorProb)^2)/sum((CzestEmp-mean(CzestEmp))^2)
+
+
+
+
+#wiek 30 staz 10
+#wiek 35 staz 15
+
+wiek1<-30
+wiek2<-35
+staz1<-10
+staz2<-15
+
+X1 <- c(1, wiek1, staz1)
+X2 <- c(1, wiek2, staz2)
+
+ProbitTeor1 <- sum(X1 * Beta)
+piTeorProb1 <- pnorm(ProbitTeor1 - 5)
+
+ProbitTeor2 <- sum(X2 * Beta)
+piTeorProb2 <- pnorm(ProbitTeor2 - 5)
+
+
+
+
+
+
+# Wczytanie danych
+dane <- read.csv2("/home/michal/Desktop/R/data/ProbitLogit.csv", sep=";", dec=".")
+
+# Obliczenia
+CzestEmp <- dane[,6] / dane[,2]
+SrWiek <- (dane$WiekDo - dane$WiekOd) / 2 + dane$WiekOd
+SrStaz <- dane$SrStazPracy
+X <- as.matrix(cbind(rep(1, 10), SrWiek, SrStaz))
+XT <- t(X)
+
+# LOGIT
+LogitEmp <- log(CzestEmp / (1 - CzestEmp))
+
+odwVi <- dane[,2]*CzestEmp*(1-CzestEmp)
+odwV <- diag(odwVi)
+
+temp <- XT %*% odwV %*% X
+tempOdw <- solve(temp)
+Beta <- tempOdw %*% XT %*% odwV %*% LogitEmp
+
+LogitTeor <- X %*% Beta
+piTeorLogit <- 1 / (1 + exp(-(LogitTeor)))
+logitR2 <- 1 - sum((CzestEmp - piTeorLogit)^2) / sum((CzestEmp - mean(CzestEmp))^2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# wiek 30, staż 10
+wiek1 <- 30
+staz1 <- 10
+X1 <- c(1, wiek1, staz1)
+LogitTeor1 <- sum(X1 * Beta)
+piTeorLogit1 <- 1 / (1 + exp(-(LogitTeor1 - 5)))
+
+# wiek 35, staż 15
+wiek2 <- 35
+staz2 <- 15
+X2 <- c(1, wiek2, staz2)
+LogitTeor2 <- sum(X2 * Beta)
+piTeorLogit2 <- 1 / (1 + exp(-(LogitTeor2 - 5)))
+
+# Wyniki
+piTeorLogit1
+piTeorLogit2
+
+
 
 # End of Script
 
