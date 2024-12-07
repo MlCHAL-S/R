@@ -351,7 +351,7 @@ zm<-read.csv2("/home/michal/Desktop/R/data/AnCz10zm.csv",sep=";",dec=".")
 # ============================================================================
 #                               Session 2: 25XI
 # ============================================================================
-setwd('/home/michal/Desktop/R/25XI')
+setwd('/home/michal/Desktop/R/R_evision/')
 
 dane<-read.csv2("/home/michal/Desktop/R/data/ProbitLogit.csv",sep=";",dec=".")
 
@@ -425,45 +425,71 @@ piTeorLogit <- 1 / (1 + exp(-(LogitTeor)))
 logitR2 <- 1 - sum((CzestEmp - piTeorLogit)^2) / sum((CzestEmp - mean(CzestEmp))^2)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # wiek 30, staż 10
 wiek1 <- 30
 staz1 <- 10
 X1 <- c(1, wiek1, staz1)
 LogitTeor1 <- sum(X1 * Beta)
-piTeorLogit1 <- 1 / (1 + exp(-(LogitTeor1 - 5)))
+piTeorLogit1 <- 1 / (1 + exp(-(LogitTeor1)))
 
 # wiek 35, staż 15
 wiek2 <- 35
 staz2 <- 15
 X2 <- c(1, wiek2, staz2)
 LogitTeor2 <- sum(X2 * Beta)
-piTeorLogit2 <- 1 / (1 + exp(-(LogitTeor2 - 5)))
+piTeorLogit2 <- 1 / (1 + exp(-(LogitTeor2)))
 
 # Wyniki
 piTeorLogit1
 piTeorLogit2
 
+# przeksztalc dla zadanego y teroety, funkcje ktora wyznacza x2.
+
+# ============================================================================
+#                               Session 2: 2XII
+# ============================================================================
+
+dane1 <- data.frame(Ytak=dane[,6], Ynie=dane[,2]-dane[,6], SrWiek, SrStaz)
+RegLog <- glm(cbind(Ytak, Ynie) ~ SrWiek + SrStaz, family = binomial(), data = dane1)
+yTeorRegLog <- exp(RegLog$coef[1] + RegLog$coef[2] * SrWiek + RegLog$coef[3] * SrStaz) / (1 + exp(RegLog$coef[1] + RegLog$coef[2] * SrWiek + RegLog$coef[3] * SrStaz))
+
+# wspoliniowosc
+vif(RegLog)
+
+M0 <- RegLog$null.deviance # lub
+M0 <- glm(cbind(Ytak, Ynie)~1, family = binomial(), data = dane1)
+
+M1wiek <- glm(cbind(Ytak, Ynie)~SrWiek, family = binomial(), data = dane1)
+M1staz <- glm(cbind(Ytak, Ynie)~SrStaz, family = binomial(), data = dane1)
+
+M2 <- glm(cbind(Ytak, Ynie)~SrStaz + SrStaz, family = binomial(), data = dane1)
+
+statD <- c(M0 - M1wiek, M0 - M1staz, M0 - M2) # not working
+chiTeor <- c(qchisq(0.95, df=1), qchisq(0.95, df=1), qchisq(0.95, df=2))
 
 
-# End of Script
 
+
+RegLogWiek <- glm(cbind(Ytak, Ynie)~SrWiek, family = binomial(), data = dane1)
+yTeorRegLogWiek <- exp(RegLogWiek$coef[1] + RegLogWiek$coef[2] * dane1$SrWiek) / (1 + exp(RegLogWiek$coef[1] + RegLogWiek$coef[2] * dane1$SrWiek))
+plot(dane1$SrWiek, yTeorRegLogWiek, type="l", xlab='wiek', ylab='P-stwo')
+
+# wiekszy zakres wiek
+x <- seq(-10, 120, 0.5)
+yTeorRegLogWiek <- exp(RegLogWiek$coef[1] + RegLogWiek$coef[2] * x) / (1 + exp(RegLogWiek$coef[1] + RegLogWiek$coef[2] * x))
+plot(x, yTeorRegLogWiek, type="l", xlab='wiek', ylab='P-stwo')
+
+
+serwery <- read.csv2('/home/michal/Desktop/R/data/serwer.csv', sep=";", dec=".")
+RegLogSerw <- glm(cbind(Nie, Tak)~nr, family = binomial(), data = serwery)
+
+yTeorRegLogSerw<- exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * serwery$nr) / (1 + exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * serwery$nr))
+
+x6 <- 6
+yTeorRegSerwX6 <- exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * x6) / (1 + exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * x6))
+x <- seq(x, yTeorRegLogSerw, type="l", xlab="Serwery")
+
+
+
+
+## praca domowa dla platnosci, chcemy wykres funkcji czyli model,
