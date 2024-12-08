@@ -480,16 +480,44 @@ yTeorRegLogWiek <- exp(RegLogWiek$coef[1] + RegLogWiek$coef[2] * x) / (1 + exp(R
 plot(x, yTeorRegLogWiek, type="l", xlab='wiek', ylab='P-stwo')
 
 
+### servery
 serwery <- read.csv2('/home/michal/Desktop/R/data/serwer.csv', sep=";", dec=".")
-RegLogSerw <- glm(cbind(Nie, Tak)~nr, family = binomial(), data = serwery)
 
-yTeorRegLogSerw<- exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * serwery$nr) / (1 + exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * serwery$nr))
+# model regresji logistyczna
+ReLoSerw <- glm(cbind(Nie, Tak)~nr, family = binomial(), data = serwery)
 
+
+yTeorSerw<- exp(ReLoSerw$coef[1] + ReLoSerw$coef[2] * serwery$nr) / (1 + exp(ReLoSerw$coef[1] + ReLoSerw$coef[2] * serwery$nr))
+
+# y - teor dla x = 6
 x6 <- 6
-yTeorRegSerwX6 <- exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * x6) / (1 + exp(RegLogSerw$coef[1] + RegLogSerw$coef[2] * x6))
-x <- seq(x, yTeorRegLogSerw, type="l", xlab="Serwery")
+yTeorSerwX6 <- exp(ReLoSerw$coef[1] + ReLoSerw$coef[2] * x6) /
+  (1 + exp(ReLoSerw$coef[1] + ReLoSerw$coef[2] * x6))
 
+
+x <- seq(-5, 10, 0.1)
+yTeorReSerw <- exp(ReLoSerw$coef[1] + ReLoSerw$coef[2] * x) /
+  (1 + exp(ReLoSerw$coef[1] + ReLoSerw$coef[2] * x))
+
+plot(x, yTeorReSerw, type = "l", xlab = "Miesiące", ylab = "Prawdopodobieństwo awarii")
+points(x6, yTeorReSerwX6, col = "red", pch = 19)  # Punkt dla 6. miesiąca
 
 
 
 ## praca domowa dla platnosci, chcemy wykres funkcji czyli model,
+platnosci <- read.csv2('/home/michal/Desktop/R/data/platnosci.csv', sep=";", dec=".")
+
+# model
+ReLoPlatnosci <- glm(cbind(Yt, Yn) ~ X, family = binomial(), data = platnosci)
+
+# obliczamy prawd dla kazdego z x
+yTeorPlatnosci <- exp(ReLoPlatnosci$coef[1] + ReLoPlatnosci$coef[2] * platnosci$X) /
+  (1 + exp(ReLoPlatnosci$coef[1] + ReLoPlatnosci$coef[2] * platnosci$X))
+yTeorPlatnosci
+
+
+x <- seq(min(platnosci$X) - 1, max(platnosci$X) + 1, 0.1)
+yTeorPlatnosci <- exp(ReLoPlatnosci$coef[1] + ReLoPlatnosci$coef[2] * x) /
+  (1 + exp(ReLoPlatnosci$coef[1] + ReLoPlatnosci$coef[2] * x))
+
+plot(x, yTeorPlatnosci, type = "l", xlab = "X (numer transakcji)", ylab = "Prawdopodobieństwo sukcesu")
