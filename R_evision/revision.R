@@ -503,9 +503,18 @@ plot(x, yTeorReSerw, type = "l", xlab = "Miesiące", ylab = "Prawdopodobieństwo
 points(x6, yTeorReSerwX6, col = "red", pch = 19)  # Punkt dla 6. miesiąca
 
 
+M0serwery <- ReLogSerw$null.deviance
+M1serwery <- ReLogSerw$.deviance
 
+statD <- M0serwery - M1serwery
+qchisq(0.95, df=1) # k1-k0=2-1-1 => H0 odrzucona
+
+
+#### platnosci
 ## praca domowa dla platnosci, chcemy wykres funkcji czyli model,
 platnosci <- read.csv2('/home/michal/Desktop/R/data/platnosci.csv', sep=";", dec=".")
+# X - cena, Yt - karta, Yn - gotowka, m - liczba platnosci
+# zapisz w "języku częstosci".
 
 # model
 ReLoPlatnosci <- glm(cbind(Yt, Yn) ~ X, family = binomial(), data = platnosci)
@@ -521,3 +530,73 @@ yTeorPlatnosci <- exp(ReLoPlatnosci$coef[1] + ReLoPlatnosci$coef[2] * x) /
   (1 + exp(ReLoPlatnosci$coef[1] + ReLoPlatnosci$coef[2] * x))
 
 plot(x, yTeorPlatnosci, type = "l", xlab = "X (numer transakcji)", ylab = "Prawdopodobieństwo sukcesu")
+points(platnosci, yTeorPlatnosci, col = "red", pch = 19) 
+
+# ============================================================================
+#                               Session n: 09XII
+# ============================================================================
+# trzeba umiec: model logitowy, probitowy
+
+install.packages('lattice', dependencies = T)
+install.packages('vcd', dependencies = T)
+install.packages('ca', dependencies = T)
+library(lattice)
+library(vcd)
+library(ca)
+
+
+# tablice kontyngencji
+tabelaPR <- read.table('/home/michal/Desktop/R/data/PalenieRak.txt', header = T)
+
+t <- data.frame(
+  rak.palenie = c('rak', 'brak'),
+  nie = c(51, 370),
+  malo = c(250, 210),
+  duzo = c(560, 59)
+)
+
+# sprawdzamy czy cechy sa zalezne od siebie, czy ida w tych samych kierunkach. Sprawdzamy za pomoca statystyki chi^2
+testchi2Palenie <- chisq.test(tabelaPR[,2:4])
+
+# obserwowane (o), oczekiwane (E)
+
+# tu ręcznie policzyc ch2 mozna
+
+
+# liczebnosci brzegowe
+margin.table(as.matrix(tabelaPR[,2:4]), 1)
+margin.table(as.matrix(tabelaPR[,2:4]), 2)
+
+# rozklady
+prop.table(tabelaPR[,2:4]) # rozklad globalny
+prop.table(as.matrix(tabelaPR[,2:4]), 1) # rozklad w wi...
+prop.table(as.matrix(tabelaPR[,2:4]), 2) # rozklad w ko..
+
+# mierniki oceny sily zaleznosci (test niezaleznosci ok...)
+summary(assocstats(as.matrix(tabelaPR[,2:4]))) # dok...
+
+# wykresy
+dotplot(as.matrix(tabelaPR[,2:4]))
+barchart(as.matrix(tabelaPR[,2:4]))
+
+
+
+#### inne dane
+dane <- read.csv('/home/michal/Desktop/R/data/MarkaCecha.csv', sep = ';')
+
+MarkaCecha <- xtabs(~marka + cecha, data = dane)
+w <- assocstats(MarkaCecha)
+
+N <- sum(MarkaCecha)
+lw <- nrow(MarkaCecha) # 1. wierszy
+lk <- ncol(MarkaCecha) # 1. wierszy
+sw <- rowSums(MarkaCecha) # 1. wierszy
+sk <- colSums(MarkaCecha) # 1. wierszy
+
+E <- (lw - 1) * (lk - 1) # stopnie swobody
+
+df <- (lw - 1) * (lk -1)
+
+lambda <- 2/3 # sugerowana przez C-R wart.
+
+CR <- 2 * sum(sort(MarkaCecha * ((MarkaCecha / E)^lambda-1)), decreasing = T)

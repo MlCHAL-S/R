@@ -1,0 +1,3 @@
+rak.palenie	nie	malo	duzo
+rak	51	250	560
+brak	370	210	59
