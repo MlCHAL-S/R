@@ -16,7 +16,6 @@ wiek=read.csv("/home/michal/Desktop/R/data/wiek.csv",header=T,sep=";") #wczytani
 wiek_sort <- sort(wiek$wiek)
 
 #	2. stworzy� funkcj�, kt�ra wyznaczy: min, max, �rednia, sd, var, mediana, dominanta, 
-kra�ce przedzia�u wg regu�y 3sigma oraz sprawdzi�, czy istniej� warto�ci odstaj�ce;
 summary <- function(wiek_sort){
   minV <- min(wiek_sort)
   cat("min: ",minV,"\n")
@@ -76,6 +75,7 @@ summary <- summary(wiek_sort)
 # ============================================================================
 #                               Session 1: 21X
 # ============================================================================
+# reczne stworzenie modelu liniowego, nauczyc sie szacowac parametry recznie oraz korzystac z lm
 setwd('/home/michal/Desktop/R/21X')
 
 plik=read.csv("/home/michal/Desktop/R/data/WM.csv",header=T,sep=";")
@@ -111,6 +111,7 @@ setwd('/home/michal/Desktop/R/28X')
 # ============================================================================
 #                               Session 1: 4XI
 # ============================================================================
+# na podstawie danych dobrac wzor funkcji, r^2, r^2 skorygowany, MSE 
 setwd('/home/michal/Desktop/R/4XI')
 trendy = read.csv("/home/michal/Desktop/R/data/Trendy.csv",header=T,sep=";")
 
@@ -171,6 +172,8 @@ lines(t, hyperFitted, col = "blue")
 # ============================================================================
 #                               Session 2: 12XI
 # ============================================================================
+# analiza wariancji, klastry, czy da sie je pogrupowac na podstawie kolumny czas,
+# sprawdzic czy cecha ma rozklad normalny, sprawdzic grupy jednorodne
 setwd('/home/michal/Desktop/R/12XI')
 srczas<-read.csv2("/home/michal/Desktop/R/data/SrCzasAlgorytmy.csv",sep=";",dec=".")
 
@@ -222,6 +225,7 @@ anova(aovsrczas)
 
 # Kruskal-Wallis - nieparametryczna alternatywa dla ANOVA jeśli np. warunek N() nie jest spełniony
 kruskal.test(srczasort$Czas,srczasort$Algorytm)
+
 
 
 ## TESTY post-hoc:
@@ -340,17 +344,25 @@ snk_results <- snk(srczasort$Czas, interaction(srczasort$Algorytm, srczasort$Ins
 # ============================================================================
 setwd('/home/michal/Desktop/R/18XI')
 
-library(nFactors)
+library(nFactors) 
 library(corpcor)
 library(psych)
 library(lavaan)
 
+# analiza czynnikowa
 kwest<-read.csv2("/home/michal/Desktop/R/data/AnCzKwestionariusz.csv",sep=";",dec=".")
+# czy na podstawie tych odpowiedzi mozna je pogrupowac w czynniki, czy beda czynniki ktorych liczba bedzie mniejsza niz liczba pytan
+# redukcja wymiaru, pakiet, psych
+# factor analysis
+# efa, cfa
+
 zm<-read.csv2("/home/michal/Desktop/R/data/AnCz10zm.csv",sep=";",dec=".")
 
 # ============================================================================
 #                               Session 2: 25XI
 # ============================================================================
+# prawdopodobienstwo, probit, cechy dyskretne, model probitowy, model ktory przewiduje przwdopodobienstwo, przelozyc z powrotem na jezyk
+# prawdopodobienstwa
 setwd('/home/michal/Desktop/R/R_evision/')
 
 dane<-read.csv2("/home/michal/Desktop/R/data/ProbitLogit.csv",sep=";",dec=".")
@@ -361,7 +373,7 @@ SrStaz<-dane$SrStazPracy
 X<-as.matrix(cbind(rep(1,10),SrWiek,SrStaz))
 XT<-t(X)
 
-#PROBIT
+#PROBIT zakladamy ze jest rozklad normalny
 ProbEmp<-qnorm(CzestEmp)+5
 
 odwVi<-1/(CzestEmp* (1-CzestEmp)/(dane[,2]*(dnorm(CzestEmp))^2))
@@ -410,7 +422,7 @@ SrStaz <- dane$SrStazPracy
 X <- as.matrix(cbind(rep(1, 10), SrWiek, SrStaz))
 XT <- t(X)
 
-# LOGIT
+# LOGIT rozklad logistyczny
 LogitEmp <- log(CzestEmp / (1 - CzestEmp))
 
 odwVi <- dane[,2]*CzestEmp*(1-CzestEmp)
@@ -448,24 +460,26 @@ piTeorLogit2
 # ============================================================================
 #                               Session 2: 2XII
 # ============================================================================
-
+# glm, zrozumiec czemu glm potrzebuje 2 kolumn
 dane1 <- data.frame(Ytak=dane[,6], Ynie=dane[,2]-dane[,6], SrWiek, SrStaz)
 RegLog <- glm(cbind(Ytak, Ynie) ~ SrWiek + SrStaz, family = binomial(), data = dane1)
 yTeorRegLog <- exp(RegLog$coef[1] + RegLog$coef[2] * SrWiek + RegLog$coef[3] * SrStaz) / (1 + exp(RegLog$coef[1] + RegLog$coef[2] * SrWiek + RegLog$coef[3] * SrStaz))
 
-# wspoliniowosc
+# wspoliniowosc > 10 => przynajmniej jedna z cech mozna usunac
 vif(RegLog)
 
 M0 <- RegLog$null.deviance # lub
-M0 <- glm(cbind(Ytak, Ynie)~1, family = binomial(), data = dane1)
+M0 <- glm(cbind(Ytak, Ynie)~1, family = binomial(), data = dane1)$deviance
 
-M1wiek <- glm(cbind(Ytak, Ynie)~SrWiek, family = binomial(), data = dane1)
-M1staz <- glm(cbind(Ytak, Ynie)~SrStaz, family = binomial(), data = dane1)
+M1wiek <- glm(cbind(Ytak, Ynie)~SrWiek, family = binomial(), data = dane1)$deviance
+M1staz <- glm(cbind(Ytak, Ynie)~SrStaz, family = binomial(), data = dane1)$deviance
 
-M2 <- glm(cbind(Ytak, Ynie)~SrStaz + SrStaz, family = binomial(), data = dane1)
+M2 <- glm(cbind(Ytak, Ynie)~SrWiek + SrStaz, family = binomial(), data = dane1)$deviance
 
 statD <- c(M0 - M1wiek, M0 - M1staz, M0 - M2) # not working
+stadD2 <- c(M0 - M1wiek, M0 - M1staz, M0 - M2, M1wiek - M2, M1staz - M2)
 chiTeor <- c(qchisq(0.95, df=1), qchisq(0.95, df=1), qchisq(0.95, df=2))
+chiTeor2 <- c(qchisq(0.95, df=1), qchisq(0.95, df=1), qchisq(0.95, df=2), qchisq(0.95 ,df=1), qchisq(0.95 ,df=1))
 
 
 
