@@ -600,3 +600,179 @@ df <- (lw - 1) * (lk -1)
 lambda <- 2/3 # sugerowana przez C-R wart.
 
 CR <- 2 * sum(sort(MarkaCecha * ((MarkaCecha / E)^lambda-1)), decreasing = T)
+
+
+# ============================================================================
+#                               Session n: 16XII
+# ============================================================================
+# kontynuacja
+
+pv <- pchisq(CR, df, lower=F)
+
+mdat <- matrix(c(CR, df, pv), nrow = 1, ncol = 3, byrow = T, dimnames = list(c('stat cr')))
+
+MarkaCechaProcent <- round((1 / N) * MarkaCecha, 4)
+
+wm <- round(ca(MarkaCecha)$rowmass, 4)
+km <- round(ca(MarkaCecha)$colmass, 4)
+print('Masy: w = ', quote=F); wm
+print('Masy: w = ', quote=F); km
+
+
+# obliczanie profili wierszy
+wProf <- round(MarkaCechaProcent / wm, 4)
+print('Profile wierszy ', quote=F); wProf
+
+# obliczanie profili kolumny
+tMarkaCechaProcent <- t(MarkaCechaProcent)
+kProf <- t(round(tMarkaCechaProcent / km, 4))
+print('Profile kolumn ', quote=F); kProf
+
+wynik <- summary(ca(MarkaCecha)) # summary -> wart. wlasna
+wynik # 
+
+
+plot(ca(tMarkaCechaProcent), what=c('all', 'all'), mass=T, contrib = 'relative', main='Mapa percepcji', labels = 0)
+
+text(
+  ca(tMarkaCechaProcent)$colcoord[,1] / 1.4,
+  ca(tMarkaCechaProcent)$colcoord[,2] / 2.7,
+  ca(tMarkaCechaProcent)$colnames,
+  cex = 0.7
+)
+
+text(
+  ca(tMarkaCechaProcent)$rowcoord[,1] / 1.4,
+  ca(tMarkaCechaProcent)$rowcoord[,2] / 2.7,
+  ca(tMarkaCechaProcent)$rownames,
+  cex = 0.7
+)
+
+# metoda warda
+
+F <- ca(MarkaCecha)$rowcoord
+G <- ca(MarkaCecha)$colcoord
+rn <- dimnames(MarkaCecha)[[1]]
+cn <- dimnames(MarkaCecha)[[2]]
+rownames(F) <- c(rn)
+rownames(G) <- c(cn)
+F2 <- cbind(F)[,c(1,2)]
+G2 <- cbind(G)[,c(1,2)]
+
+dim1 <- append(F2[,1], G2[,1])
+dim2 <- append(F2[,2], G2[,2])
+
+odl <- dist(cbind(dim1, dim2), method = 'euclidean')^2
+
+dend <- hclust(odl, method = 'ward.D2')
+plot(
+  dend, 
+  main='Dendrogram - metoda Warda',
+  ylab = 'Odl Euklidesa',
+  xlab = 'Skupienia',
+  sub=''
+)
+
+
+### do samodzielnej: KP, KA, AP, trzeba sprawdzic jakies p value aby sprawdzic czy analiza ma sens
+### 
+dane <- read.csv('/home/michal/Desktop/R/data/16XIIAKP.csv', sep = ';')
+data.frame(dane)
+
+# czy jest sens
+KPtab <- xtabs(~K+P, data = dane) # kawa, papi
+KAtab <- xtabs(~K + A, data = dane) # kawa, alko
+APtab <- xtabs(~A + P, data = dane) # alko, papi
+
+assocstats(KPtab)
+assocstats(KAtab)
+assocstats(APtab)
+
+
+
+
+APCecha <- xtabs(~ A + P, data = dane)
+
+library(ca)
+library(cluster)
+
+N <- sum(APCecha)
+lw <- nrow(APCecha)
+lk <- ncol(APCecha) 
+sw <- rowSums(APCecha)
+sk <- colSums(APCecha) 
+df <- (lw - 1) * (lk - 1) 
+
+lambda <- 2/3
+CR <- 2 * sum(sort(APCecha * ((APCecha / (N / (lw * lk)))^lambda - 1), decreasing = TRUE))
+
+pv <- pchisq(CR, df, lower.tail = FALSE)
+cat("Statystyka CR:", CR, "Stopnie swobody:", df, "P-wartość:", pv, "\n")
+
+APCechaProcent <- round((1 / N) * APCecha, 4)
+
+# Masy i profile
+wm <- round(ca(APCecha)$rowmass, 4)
+km <- round(ca(APCecha)$colmass, 4)
+wProf <- round(APCechaProcent / wm, 4)
+kProf <- t(round(t(APCechaProcent) / km, 4))
+
+cat("Profile wierszy:\n")
+print(wProf)
+cat("Profile kolumn:\n")
+print(kProf)
+
+wynik <- summary(ca(APCecha))
+print(wynik)
+
+par(mfrow=c(1,2))
+# Mapa percepcji
+plot(ca(APCecha), main = "Mapa percepcji - Alkohol i Papierosy", mass = TRUE, contrib = "relative")
+text(
+  ca(APCecha)$rowcoord[, 1],
+  ca(APCecha)$rowcoord[, 2],
+  labels = rownames(APCecha),
+  cex = 0.8
+)
+text(
+  ca(APCecha)$colcoord[, 1],
+  ca(APCecha)$colcoord[, 2],
+  labels = colnames(APCecha),
+  cex = 0.8
+)
+
+
+
+F <- ca(APCecha)$rowcoord
+G <- ca(APCecha)$colcoord
+rownames(F) <- rownames(APCecha)
+rownames(G) <- colnames(APCecha)
+
+# Łączenie wymiarów
+dim1 <- append(F[, 1], G[, 1])
+dim2 <- append(F[, 2], G[, 2])
+
+# Obliczanie odległości Euklidesowych
+odl <- dist(cbind(dim1, dim2), method = "euclidean")^2
+
+
+
+# Dendrogram (metoda Warda)
+dend <- hclust(odl, method = "ward.D2")
+plot(
+  dend,
+  main = "Dendrogram - Alkohol i Papierosy",
+  ylab = "Odległość Euklidesowa",
+  xlab = "Grupy",
+  sub = ""
+)
+
+
+
+
+
+library(MASS)
+library(rpart)
+library(tree)
+marki <- data.frame(read.csv('/home/michal/Desktop/R/data/samochody.csv', sep = ';', dec = '.'))
+describe(marki)
