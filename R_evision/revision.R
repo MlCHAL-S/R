@@ -243,7 +243,7 @@ snk(srczasort$Czas,srczasort$Algorytm,dfErrorSrCzas,SSerrorSrCzas)
 #============spalanie===========
 
 # Create the new dataset
-data <-read.csv2("SrSpalanie.csv",sep=";",dec=".")
+data <-read.csv2("/home/michal/Desktop/R/data/SrSpalanie.csv",sep=";",dec=".")
 
 data_long <- data.frame(
   Algorithm = rep(c("S1", "S2", "S3", "S4", "S5"), each = 6),
