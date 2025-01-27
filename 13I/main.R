@@ -6,19 +6,24 @@ library(MASS)
 library(rpart)
 library(tree)
 
-marki <- read.csv("data/samochody.csv", header = TRUE, sep = ";")
+# install.packages('tree')
+
+marki <- read.csv("/home/michal/Desktop/R/data/samochody.csv", header = TRUE, sep = ";")
 marki_df <- data.frame(as.factor(marki[, 1]), marki[, 2:19])
 names(marki_df) <- names(marki)
 
 
 # Drzewa klasyfikacyjne (dyskryminacyjne) - podzial na regiony R_i
 # Drzewa regresyjne - przypisanie T lub N dla X_i < x_i do regionu R_i
-# Y = f(X_1, X_2, ..., X_m) => f(x_i) = sum(k=1)^K / alpha_i I(x_i /in R_I)
+# Y = f(X_1, X_2, ..., X_m) => f(x_i) = sum(k=1)^K \alpha_i I(x_i \in R_I)
 # R_1, ..., R_K - segmenty (podprzestrzenie X^m)
 # I - indykator
 # Kazdy z obszarow R_k okreslany przez granice w X^m
 # Ocena jakosci podzialu (homogenicznosc podprzestrzeni):
-# 
+# Q(R_k) = 1 / N(k) \sum_(x_i \in R_i) (y_i -\alpha_k)^2
+# lub (cechy nominalne) - entropia, wsk. Giniego,...
+# optymalny wybor: S_\lambda (D) =\sum_{k=1}^K Q(R_k)p_k+\lambda K 
+# D-model (drzewo), \lambda-par.zlozonosci
 
 
 # drzewp
@@ -34,25 +39,19 @@ marki_drzewo_prune <- prune.tree(marki_drzewo, best = 3)
 # dla 3 budowane na: "Wydluzenie" i "Wyp..."
 
 # plot dla przycietego
-plot(marki_df$Wydluzenie,
-  marki_df$WspProporcjiMaxOsi,
-  type = "n",
-  xlab = "Wydluzenie",
-  ylab = "WspProporcjiMaxOsi",
-)
+plot(marki_df$Wydluzenie, marki_df$WspProporcjiMaxOsi, type = "n",
+     xlab = "Wydluzenie", ylab = "WspProporcjiMaxOsi")
 
 text(marki_df$Wydluzenie,
   marki_df$WspProporcjiMaxOsi,
   c("1", "2", "3", "4")[marki_df$Marka]
 )
-# 1 - bus, 2 - open, 3  -saab, 4 - van
-
 
 partition.tree(marki_drzewo_prune,
     add = TRUE,
     cex = 0.8
 )
-
+# 1 - bus, 2 - open, 3  -saab, 4 - van
 
 # Szukanie wielkosci drzewa: uczacy + testowy
 set.seed(114)
@@ -61,7 +60,11 @@ test <- sample(1:liczebnosc,
     round(liczebnosc / 3),
     replace = FALSE,
 )
+
+# Train data
 marki_ucz <- marki_df[-test, ]
+
+# Test data
 marki_test <- marki_df[test, ]
 
 # model
@@ -105,8 +108,55 @@ legend("topright",
 
 
 
+#################################################################################
+                              # My Exercise
+#################################################################################
+
+data(iris)
+head(iris)
+
+iris_tree <- tree(Species ~ ., data = iris)
+
+plot(iris_tree, main = "Classification of Iris Flowers")
+text(iris_tree)
+
+# Train and test data
+set.seed(42)
+test_idx <- sample(1:nrow(iris), nrow(iris) / 3)
+
+iris_train <- iris[-test_idx, ]
+iris_test <- iris[test_idx, ]
+
+# Fit model
+iris_rpart <- rpart(Species ~ ., data = iris_train, control = rpart.control(xval = 10, cp = 0))
+
+# Isolate complexity parameter table
+iris_cp <- iris_rpart$cptable
+
+# Finds the complexity parameter (cp) that minimizes cross-validation error.
+# which.min() identifies the row index of the smallest value in column 4
+iris_opt_cp <- iris_cp[which.min(iris_cp[, 4]), 1]
+
+# Prunes the tree using the optimal complexity parameter (cp), 
+# resulting in a simpler tree that balances accuracy and generalization.
+iris_pruned <- prune(iris_rpart, cp = iris_opt_cp)
+
+# Plot the tree
+plot(iris_pruned, main = "Pruned Iris Decision Tree")
+text(iris_pruned)
 
 
+
+
+
+plot(iris_cp[, 2] + 1, iris_cp[, 4], type = "n", xlab = "Tree Size", ylab = "Classification Error")
+lines(iris_cp[, 2] + 1, iris_cp[, 4], lty = 1)
+lines(iris_cp[, 2] + 1, iris_cp[, 3], lty = 2)
+legend("topright", legend = c("Cross-Validation Error", "Resubstitution Error"), lty = 1:2)
+
+#################################################################################
+#################################################################################
+#################################################################################
 
 
 ### procesory
@@ -141,20 +191,90 @@ lines(cache_podzial, perf_pred)
 
 # irysy
 # Wczytanie danych
-irysy_data <- read.csv("data/irysy.csv", header = TRUE, sep = ";")
-irysy_df <- data.frame(as.factor(irysy_data))
+irysy_data <- read.csv("/home/michal/Desktop/R/data/irysy.csv", header = TRUE, sep = ";")
+irysy_df <- data.frame(
+  gatunek = as.factor(irysy_data$gatunek),
+  irysy_data[, -1] # Include all other columns except the first (assumed target is the first column)
+)
 
+# Fit a decision tree
 irysy_drzewo <- tree(
-    gatunek ~ DlPlatkaZ + SzPlatkaZ + DlPlatkaW + SzPlatkaW, 
-    data = irysy_df)
+  gatunek ~ ., # Use all features to predict 'gatunek'
+  data = irysy_df
+)
 
-plot(irysy_drzewo)
+# Build the decision tree
+plot(irysy_drzewo, main = "Decision Tree for Iris Dataset")
 text(irysy_drzewo)
 
-# 1 wykres
-partition.tree(irysy_drzewo)
+# 1 wykres - Visualizing decision boundaries
+# Ensure features 'DlPlatkaZ' and 'SzPlatkaZ' exist in the dataset
+plot(
+  irysy_df$DlPlatkaZ, irysy_df$SzPlatkaZ,
+  type = "n",
+  xlab = "DlPlatkaZ",
+  ylab = "SzPlatkaZ",
+  main = "Decision Boundaries for Iris Data"
+)
+text(
+  irysy_df$DlPlatkaZ, irysy_df$SzPlatkaZ,
+  labels = as.numeric(irysy_df$gatunek) # Label points with their class
+)
+partition.tree(irysy_drzewo, add = TRUE)
 
-# 2 wykjres, blad klasyfikacji
 
 
-#. blafd klasyfikacji ma wyjsc 0.6
+# Splitting data into training and test sets for validation
+set.seed(123) # For reproducibility
+n <- nrow(irysy_df)
+test_indices <- sample(1:n, round(n / 3), replace = FALSE)
+irysy_train <- irysy_df[-test_indices, ]
+irysy_test <- irysy_df[test_indices, ]
+
+
+
+# Train a more refined tree using rpart
+irysy_rpart <- rpart(
+  gatunek ~ ., 
+  data = irysy_train,
+  control = rpart.control(xval = 10, cp = 0) # Allow full growth initially
+)
+
+
+# Find optimal complexity parameter (cp) using cross-validation
+irysy_cp <- irysy_rpart$cptable
+optimal_cp <- irysy_cp[which.min(irysy_cp[, 4]), 1]
+
+# Prune the tree based on the optimal cp
+irysy_pruned <- prune(irysy_rpart, cp = optimal_cp)
+
+# Visualize the pruned tree
+plot(irysy_pruned, main = "Pruned Decision Tree for Iris Dataset")
+text(irysy_pruned)
+
+
+# Evaluate the model on the test set
+predictions <- predict(irysy_pruned, irysy_test, type = "class")
+confusion_matrix <- table(Predicted = predictions, Actual = irysy_test$gatunek)
+
+# Calculate classification error rate
+classification_error <- 1 - sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Classification error rate:", classification_error))
+
+
+
+# Blad klasyfikacji graph
+plot(
+  irysy_cp[, 2] + 1, irysy_cp[, 4],
+  type = "n",
+  xlab = "Tree Size",
+  ylab = "Classification Error",
+  main = "Classification Error vs. Tree Size"
+)
+lines(irysy_cp[, 2] + 1, irysy_cp[, 4], lty = 1) # Cross-validation error
+lines(irysy_cp[, 2] + 1, irysy_cp[, 3], lty = 2) # Resubstitution error
+legend(
+  "topright",
+  legend = c("Cross-Validation Error", "Resubstitution Error"),
+  lty = 1:2
+)

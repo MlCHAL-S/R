@@ -8,6 +8,8 @@ library(nFactors)
 library(corpcor)
 library(psych)
 library(lavaan)
+
+install.packages("name")
 # ============================================================================
 #                               LM, predicting values, plotting
 # ============================================================================
@@ -71,6 +73,11 @@ new_ads_y <- predict(ads_model, newdata = new_ads)
 trends = read.csv("/home/michal/Desktop/R/data/Trendy.csv",header=T,sep=";")
 par(mfrow = c(2, 2))
 
+# more formulas:
+# y ~ a * exp(b * x)
+# y ~ a / (1 + b * exp(-c * x))
+# y ~ a / (x + b)
+
 ### Y1 ###
 plot(trends$y1)
 
@@ -128,6 +135,72 @@ cat(sprintf("Y4 - MSE (Exponential): %.3f, MSE (Quadratic): %.3f, MSE (Logistic)
             mse_y4_exp, mse_y4_quad, mse_y4_logistic))
 
 
+### Test exercise
+data <- read.csv("/home/michal/Desktop/R/data/kolokwium_data.csv")
+
+# Podział na grupy
+group1 <- subset(data, group == "Group 1")
+group2 <- subset(data, group == "Group 2")
+
+model_group1_lm <- lm(y ~ t, data = group1)
+model_group1_quad <- lm(y ~ t + I(t^2), data = group1)
+model_group1_logistic <- nls(y ~ a / (1 + b * exp(-c * t)), 
+                             data = group1, 
+                             start = list(a = 100, b = 5, c = 0.7))
+
+# Obliczenie mierników dla Grupy 1
+mse_group1_lm <- mean(residuals(model_group1_lm)^2)
+mse_group1_quad <- mean(residuals(model_group1_quad)^2)
+mse_group1_logistic <- mean(residuals(model_group1_logistic)^2)
+
+
+r2_group1_lm <- summary(model_group1_lm)$r.squared
+r2adj_group1_lm <- summary(model_group1_lm)$adj.r.squared
+
+r2_group1_quad <- summary(model_group1_quad)$r.squared
+r2adj_group1_quad <- summary(model_group1_quad)$adj.r.squared
+
+# Second group
+model_group2_lm <- lm(y ~ t, data = group2)
+model_group2_quad <- lm(y ~ t + I(t^2), data = group2)
+model_group2_exp <- nls(y ~ a * exp(b * t), 
+                        data = group2, 
+                        start = list(a = 10, b = -0.3))
+
+
+mse_group2_lm <- mean(residuals(model_group2_lm)^2)
+mse_group2_quad <- mean(residuals(model_group2_quad)^2)
+mse_group2_exp <- mean(residuals(model_group2_exp)^2)
+
+
+r2_group2_lm <- summary(model_group2_lm)$r.squared
+r2adj_group2_lm <- summary(model_group2_lm)$adj.r.squared
+
+r2_group2_quad <- summary(model_group2_quad)$r.squared
+r2adj_group2_quad <- summary(model_group2_quad)$adj.r.squared
+
+
+
+cat("Grupa 1 - MSE:", mse_group1_lm, mse_group1_quad, mse_group1_logistic, "\n")
+cat("Grupa 1 - R^2:", r2_group1_lm, r2_group1_quad, "\n")
+cat("Grupa 1 - Adjusted R^2:", r2adj_group1_lm, r2adj_group1_quad, "\n")
+
+cat("Grupa 2 - MSE:", mse_group2_lm, mse_group2_quad, mse_group2_exp, "\n")
+cat("Grupa 2 - R^2:", r2_group2_lm, r2_group2_quad, "\n")
+cat("Grupa 2 - Adjusted R^2:", r2adj_group2_lm, r2adj_group2_quad, "\n")
+
+
+# Wizualizacja dla Grupy 1
+plot(group1$t, group1$y, main = "Group 1", pch = 16)
+lines(group1$t, predict(model_group1_lm), col = 'red', lwd = 2)
+lines(group1$t, predict(model_group1_quad), col = 'blue', lwd = 2)
+lines(group1$t, predict(model_group1_logistic), col = 'green', lwd = 2)
+
+# Wizualizacja dla Grupy 2
+plot(group2$t, group2$y, main = "Group 2", pch = 16)
+lines(group2$t, predict(model_group2_lm), col = 'red', lwd = 2)
+lines(group2$t, predict(model_group2_quad), col = 'blue', lwd = 2)
+lines(group2$t, predict(model_group2_exp), col = 'green', lwd = 2)
 # ============================================================================
 # VARIANCE ANALYSIS (ANOVA AND RELATED TESTS)
 # ============================================================================
